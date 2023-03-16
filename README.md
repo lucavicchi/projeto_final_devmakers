@@ -77,4 +77,6 @@ import java.util.UUID;
 
 String id = UUID.randomUUID().toString();
 ```
+# Entrega
 
+> A entrega deve ser feita pelo github enviando o link na atividade que será disponibilizada no class
