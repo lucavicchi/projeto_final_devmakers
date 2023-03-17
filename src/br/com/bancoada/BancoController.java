@@ -2,8 +2,12 @@ package br.com.bancoada;
 
 import br.com.bancoada.domain.Conta;
 import br.com.bancoada.domain.Transacao;
+import br.com.bancoada.services.ContaRepository;
+import br.com.bancoada.services.TransacaoRepository;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -21,10 +25,10 @@ public class BancoController {
             System.out.println("1. Listar contas");
             System.out.println("2. Criar nova conta");
             System.out.println("3. Detalhar conta por ID");
-            System.out.println("4. Novo deposito");
+            System.out.println("4. Novo depósito");
             System.out.println("5. Novo saque");
-            System.out.println("6. Obter todas as transacoes");
-            System.out.println("7. Transacão por ID");
+            System.out.println("6. Obter todas as transações");
+            System.out.println("7. Transação por ID");
             System.out.println("8. Extrato");
             System.out.println();
 
@@ -43,10 +47,12 @@ public class BancoController {
                 break;
 
             case 1:
-                // todo: implemente o service com a lógica para buscar todas as contas do arquivo contas.txt
-                List<Conta> contas = null;
-
-                listarContasOpcao(contas);
+                try {
+                    List<Conta> contas = ContaRepository.getInstance().getAll();
+                    listarContasOpcao(contas);
+                } catch (IOException e) {
+                    System.out.println("Ocorreu um erro ao buscar as contas. Tente novamente.");
+                }
                 break;
 
             case 2:
@@ -60,10 +66,12 @@ public class BancoController {
                 System.out.print("Entre com o cpf do titular: ");
                 String cpf = scanner.nextLine();
 
-                // todo: implemente o service para salvar uma nova conta no arquivo contas.txt e retorne o novo ID
-                String novoId = "";
-
-                System.out.printf("Nova conta adicionada. [id=%s]\n", novoId);
+                try {
+                    String novoId = ContaRepository.getInstance().save(new Conta(null, titular, cpf, Instant.now()));
+                    System.out.printf("Nova conta adicionada. [id=%s]\n", novoId);
+                } catch (IOException e) {
+                    System.out.println("Ocorreu um erro ao salvar a nova conta. Tente novamente.");
+                }
                 break;
 
             case 3:
@@ -74,14 +82,19 @@ public class BancoController {
                 System.out.print("entre com o ID da conta: ");
                 String idInformado = scanner.nextLine();
 
-                // todo: implemente a service da conta para verificar se essa conta existe e obte-la pelo idInformado,
-                // caso não exista, mostre CONTA INEXISTENTE para o usuário
-                Conta contaOpcao3 = null;
+                try {
+                    Conta contaOpcao3 = (Conta) ContaRepository.getInstance().getById(idInformado).orElse(null);
 
-                // todo: em seguida implemente o service da transacao para obter o saldo baseado no arquivo <id>_transacoes.txt
-                BigDecimal saldo = null;
+                    if (contaOpcao3 == null) {
+                        System.out.println("CONTA INEXISTENTE");
+                    } else {
+                        BigDecimal saldo = TransacaoRepository.getInstance().getSaldo(idInformado);
 
-                detalharContaMenu(contaOpcao3, saldo);
+                        detalharContaMenu(contaOpcao3, saldo);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Ocorreu um erro ao buscar a conta ou o saldo. Tente novamente.");
+                }
                 break;
 
             case 4:
